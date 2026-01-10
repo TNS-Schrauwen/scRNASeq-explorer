@@ -31,7 +31,7 @@ plt.rcParams.update({
 sns.set_style("whitegrid")
 
 def main():
-    st.title("🔍 Quality Control")
+    st.title("Quality Control")
     st.markdown("""
     Comprehensive quality control for single-cell RNA sequencing data.  
     Identify low-quality cells, doublets, and technical artifacts using multiple metrics.
@@ -58,7 +58,7 @@ def main():
     ribo_pattern = st.sidebar.text_input("Ribosomal gene pattern", value="^RPS|^RPL|^Rps|^Rpl")
 
     # Tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Key Metrics", "📈 Static Plots", "📊 Interactive Plots", "📋 Summary Report"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Key Metrics", "Static Plots", "Interactive Plots", "Summary Report"])
 
     with tab1:
         st.header("Key Quality Control Metrics")
@@ -195,7 +195,7 @@ def main():
             for issue in report['potential_issues']:
                 st.warning(issue)
 
-        st.subheader("🎯 Recommended Next Steps")
+        st.subheader("Recommended Next Steps")
         st.info("""
         - Use **MAD-based filtering** (robust to outliers) on `n_genes_by_counts`, `total_counts`, and `pct_counts_mt`.
         - Typical thresholds: >200–500 genes, <10–20% MT (tissue-dependent).

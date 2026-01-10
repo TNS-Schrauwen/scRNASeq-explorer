@@ -7,7 +7,7 @@ from utils.plotting import Plotting
 from utils.workspace_manager import WorkspaceManager
 
 def main():
-    st.title("📈 Differential Expression")
+    st.title("Differential Expression")
     st.markdown("Identify marker genes and perform differential expression analysis between clusters.")
     
     # Check if clustering is done
@@ -80,7 +80,7 @@ def main():
     )
     
     # Main content with tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["🔍 DE Analysis", "📊 Results", "📈 Visualization", "📋 Marker Genes"])
+    tab1, tab2, tab3, tab4 = st.tabs(["DE Analysis", "Results", "Visualization", "Marker Genes"])
     
     with tab1:
         st.header("Differential Expression Analysis")

@@ -6,7 +6,7 @@ from utils.plotting import Plotting
 from utils.workspace_manager import WorkspaceManager
 
 def main():
-    st.title("📉 Advanced Visualization")
+    st.title("Advanced Visualization")
     st.markdown("Explore your single-cell data with interactive visualizations and custom plots.")
     
     # Check if data is loaded
@@ -54,7 +54,7 @@ def main():
     )
     
     # Main content with tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["🗺️ Embeddings", "🧬 Gene Expression", "📊 Multi-Gene", "🎨 Custom Plots"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Embeddings", "Gene Expression", "Multi-Gene", "Custom Plots"])
     
     with tab1:
         st.header("Embedding Visualizations")

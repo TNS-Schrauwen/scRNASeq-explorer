@@ -25,7 +25,7 @@ plt.rcParams.update({
 })
 
 def main():
-    st.title("👥 Doublet Detection")
+    st.title("Doublet Detection")
     st.markdown("Identify and remove technical doublets using Scanpy's doublet detection methods.")
     
     # Check if data is loaded
@@ -67,12 +67,12 @@ def main():
     )
     
     # Doublet detection workflow
-    tab1, tab2, tab3, tab4 = st.tabs(["🔍 Detect Doublets", "📊 Results", "📈 Visualization", "⚙️ Filtering"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Detect Doublets", "Results", "Visualization", "Filtering"])
     
     with tab1:
         st.header("Doublet Detection")
         
-        if st.button("🚀 Run Doublet Detection", type="primary"):
+        if st.button("Run Doublet Detection", type="primary"):
             with st.spinner("Detecting doublets..."):
                 try:
                     adata_with_doublets = DoubletDetection.detect_doublets_scanpy(
@@ -191,7 +191,7 @@ def main():
             col1, col2 = st.columns(2)
             
             with col1:
-                if st.button("🗑️ Remove Doublets", type="primary"):
+                if st.button("Remove Doublets", type="primary"):
                     st.session_state.adata_history.append(adata.copy())
                     adata_filtered = adata[~adata.obs['predicted_doublets']].copy()
                     st.session_state.adata = adata_filtered
@@ -215,7 +215,7 @@ def main():
     
     # Next steps
     st.divider()
-    st.subheader("🎯 Next Steps")
+    st.subheader("Next Steps")
     st.info("""
     After doublet detection and filtering, proceed to **Filtering** to remove low-quality cells 
     based on QC metrics, then continue to **Batch Correction** if you have multiple batches.

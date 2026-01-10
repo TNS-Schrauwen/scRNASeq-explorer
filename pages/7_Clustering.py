@@ -7,7 +7,7 @@ from utils.plotting import Plotting
 from utils.workspace_manager import WorkspaceManager
 
 def main():
-    st.title("🔬 Clustering")
+    st.title("Clustering")
     st.markdown("Identify cell clusters using Leiden or Louvain algorithms.")
     
     # Check if dimensionality reduction is done
@@ -48,7 +48,7 @@ def main():
     )
     
     # Main content with tabs
-    tab1, tab2, tab3 = st.tabs(["⚙️ Clustering", "📊 Results", "📈 Comparison"])
+    tab1, tab2, tab3 = st.tabs(["Clustering", "Results", "Comparison"])
     
     with tab1:
         st.header("Cell Clustering")

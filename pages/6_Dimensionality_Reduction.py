@@ -44,7 +44,7 @@ def create_custom_color_map(group_labels, selected_colors):
 
 
 def main():
-    st.title("📊 Dimensionality Reduction")
+    st.title("Dimensionality Reduction")
     st.markdown("Reduce data dimensionality using PCA, UMAP, and t-SNE for visualization and analysis.")
     
     # Check if preprocessing is done
@@ -82,7 +82,7 @@ def main():
     n_neighbors = st.sidebar.slider("Number of neighbors", min_value=5, max_value=100, value=15)
     
     # Main content with tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["🧮 PCA", "🗺️ UMAP", "🌀 t-SNE", "📈 Run All"])
+    tab1, tab2, tab3, tab4 = st.tabs(["PCA", "UMAP", "t-SNE", "Run All"])
     
     with tab1:
         st.header("Principal Component Analysis (PCA)")

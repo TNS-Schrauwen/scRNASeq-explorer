@@ -14,7 +14,7 @@ import plotly.io as pio
 
 
 def main():
-    st.title("💾 Export Results")
+    st.title("Export Results")
     st.markdown("Export your analysis results, plots, and reproducible code.")
     
     # Check if workspace is set
@@ -67,7 +67,7 @@ def main():
     # Export options
     st.header("Export Options")
     
-    tab1, tab2, tab3, tab4 = st.tabs(["📁 Data Export", "📊 Plots Export", "📜 Reproducible Code", "📋 Analysis Report"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Data Export", "Plots Export", "Reproducible Code", "Analysis Report"])
     
     with tab1:
         st.subheader("Export Processed Data")
