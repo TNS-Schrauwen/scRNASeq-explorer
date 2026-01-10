@@ -4,7 +4,7 @@ import yaml
 from utils.workspace_manager import WorkspaceManager
 
 def main():
-    st.title("🏠 Workspace Management")
+    st.title("Workspace Management")
     st.markdown("Create or load a workspace to organize your single-cell analysis projects.")
     
     # Initialize workspace manager
