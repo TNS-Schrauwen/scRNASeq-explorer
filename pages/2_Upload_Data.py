@@ -9,7 +9,7 @@ from utils.workspace_manager import WorkspaceManager
 
 
 def main():
-    st.title("📁 Upload Single-Cell Data (Multiple Samples or Single File)")
+    st.title("Upload Single-Cell Data (Multiple Samples or Single File)")
     st.markdown("""
     **Step 1**: Define your experimental groups (e.g., Control, Treated) if uploading .h5 files.  
     **Step 2**: Upload either multiple 10x HDF5 files (.h5) or a single .h5ad file.  
@@ -23,7 +23,7 @@ def main():
     workspace_manager = st.session_state.workspace_manager
     workspace_path = st.session_state.workspace_path
 
-    with st.expander("📋 Supported Formats"):
+    with st.expander("Supported Formats"):
         st.markdown("""
         - **10x Genomics HDF5 (.h5)** – Multiple samples allowed (one file per sample).
         - **AnnData HDF5 (.h5ad)** – Single file only (pre-merged dataset).
