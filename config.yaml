@@ -1,0 +1,25 @@
+app:
+  name: "scRNA-seq Analysis Platform"
+  version: "1.0.0"
+  description: "Interactive single-cell RNA-seq analysis tool"
+
+workspace:
+  base_dir: "./workspaces"
+  default_name: "default_workspace"
+
+data:
+  supported_formats: [".h5ad", ".loom", ".mtx", ".csv", ".tsv"]
+  max_upload_size: 5000  # MB
+
+analysis:
+  default_n_neighbors: 15
+  default_n_pcs: 50
+  default_resolution: 1.0
+  default_min_genes: 200
+  default_max_genes: 2500
+  default_max_mito: 5.0
+
+plotting:
+  theme: "plotly_white"
+  width: 800
+  height: 600
