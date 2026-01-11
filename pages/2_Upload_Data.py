@@ -87,15 +87,15 @@ def main():
             st.subheader("Cell Distribution by Sample & Group")
             if 'sample' in adata.obs and 'group' in adata.obs:
                 dist = adata.obs[['sample', 'group']].value_counts().reset_index(name="Cell Count")
-                st.dataframe(dist.sort_values(['group', 'sample']), use_container_width=True)
+                st.dataframe(dist.sort_values(['group', 'sample']), width='stretch')
             else:
                 st.write("No 'sample' or 'group' metadata available.")
 
             st.subheader("Obs Metadata (First 1000)")
-            st.dataframe(adata.obs.head(1000), use_container_width=True)
+            st.dataframe(adata.obs.head(1000), width='stretch')
 
             st.subheader("Var Metadata (First 1000)")
-            st.dataframe(adata.var.head(1000), use_container_width=True)
+            st.dataframe(adata.var.head(1000), width='stretch')
 
         if st.button("Go to Quality Control →", type="primary", use_container_width=True):
             st.switch_page("pages/3_Quality_Control.py")
@@ -140,7 +140,7 @@ def handle_multiple_h5(uploaded_files, workspace_manager, workspace_path):
     edited_df = st.data_editor(
         assignment_df,
         num_rows="fixed",
-        use_container_width=True,
+        width='stretch',
         column_config={
             "Sample ID": st.column_config.TextColumn(disabled=True),
             "Filename": st.column_config.TextColumn(disabled=True),

@@ -2,22 +2,12 @@ import streamlit as st
 import scanpy as sc
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import seaborn as sns
 from utils.preprocessing import Preprocessing
 from utils.plotting import Plotting
 from utils.workspace_manager import WorkspaceManager
 
-
-# Common Plotly template and style settings for publication-quality white background
-COMMON_LAYOUT = dict(
-    template="simple_white",
-    paper_bgcolor="white",
-    plot_bgcolor="white",
-    font=dict(family="Arial", size=12, color="black"),
-    title_font=dict(family="Arial", size=16, color="black"),
-    legend_title_font=dict(color="black"),
-    legend_font=dict(color="black"),
-)
 
 # Predefined readable color names (colorblind-friendly + distinct)
 COLOR_OPTIONS = [
@@ -27,13 +17,42 @@ COLOR_OPTIONS = [
 ]
 
 
-def apply_publication_style(fig):
+def apply_plotly_publication_style(fig):
     """Apply consistent publication-quality styling to a Plotly figure."""
-    fig.update_layout(**COMMON_LAYOUT)
+    fig.update_layout(
+        template="simple_white",
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        font=dict(family="Arial", size=12, color="black"),
+        title_font=dict(family="Arial", size=16, color="black"),
+    )
     fig.update_xaxes(title_font=dict(weight="bold"), tickfont=dict(color="black"), linewidth=1, linecolor="black", mirror=True)
     fig.update_yaxes(title_font=dict(weight="bold"), tickfont=dict(color="black"), linewidth=1, linecolor="black", mirror=True)
-    fig.update_traces(marker=dict(line=dict(width=0)))  # Remove point borders
     return fig
+
+def set_publication_style():
+    """Set matplotlib style for publication-quality plots"""
+    plt.rcParams.update({
+        'figure.facecolor': 'white',
+        'axes.facecolor': 'white',
+        'axes.edgecolor': 'black',
+        'axes.linewidth': 1.5,
+        'axes.labelcolor': 'black',
+        'text.color': 'black',
+        'xtick.color': 'black',
+        'ytick.color': 'black',
+        'axes.labelweight': 'bold',
+        'axes.titleweight': 'bold',
+        'font.weight': 'bold',
+        'font.family': 'sans-serif',
+        'font.size': 12,
+        'legend.frameon': True,
+        'legend.edgecolor': 'black',
+        'legend.facecolor': 'white',
+        'grid.color': 'lightgray',
+        'grid.linestyle': '--',
+        'grid.alpha': 0.3
+    })
 
 
 def create_custom_color_map(group_labels, selected_colors):
@@ -94,10 +113,37 @@ def main():
                     sc.pp.pca(adata, n_comps=n_pcs, use_highly_variable=use_hvg)
                     
                     # Plot variance explained with elbow point
-                    fig_variance = Plotting.plot_pca_variance(adata, n_pcs)
-                    fig_variance = apply_publication_style(fig_variance)
-                    fig_variance.update_layout(title="PCA Variance Explained")
-                    st.plotly_chart(fig_variance, use_container_width=True)
+                    set_publication_style()
+                    fig_variance, ax = plt.subplots(figsize=(10, 6))
+                    
+                    variance_ratio = adata.uns['pca']['variance_ratio'][:n_pcs]
+                    cumulative_variance = np.cumsum(variance_ratio)
+                    elbow_point = Plotting._find_elbow_point(variance_ratio)
+                    
+                    # Plot individual variance
+                    ax.bar(range(1, len(variance_ratio)+1), variance_ratio, 
+                          alpha=0.6, color='lightgray', edgecolor='black', label='Individual Variance')
+                    
+                    # Plot cumulative variance
+                    ax2 = ax.twinx()
+                    ax2.plot(range(1, len(variance_ratio)+1), cumulative_variance, 
+                            'o-', color='black', linewidth=2, markersize=6, label='Cumulative Variance')
+                    
+                    # Elbow line
+                    ax.axvline(elbow_point + 1, color='#d62728', linestyle='--', linewidth=2, 
+                              label=f'Elbow: PC{elbow_point + 1}')
+                    
+                    ax.set_xlabel('Principal Component', fontweight='bold')
+                    ax.set_ylabel('Individual Variance Ratio', fontweight='bold')
+                    ax2.set_ylabel('Cumulative Variance Ratio', fontweight='bold')
+                    ax.set_title('PCA Variance Explained', fontweight='bold')
+                    
+                    # Combine legends
+                    lines, labels = ax.get_legend_handles_labels()
+                    lines2, labels2 = ax2.get_legend_handles_labels()
+                    ax2.legend(lines + lines2, labels + labels2, loc='center right')
+                    
+                    st.pyplot(fig_variance)
                     st.caption("**Summary:** This scree plot shows the proportion of variance explained by each principal component. The elbow point suggests the optimal number of PCs to retain.")
                     
                     # Show PCA loadings
@@ -134,27 +180,45 @@ def main():
                     with col3:
                         pc2 = st.number_input("PC for Y-axis", min_value=1, max_value=n_pcs, value=2)
                     
-                    # Plot PCA scatter
-                    if pca_color_by == 'None':
-                        fig_pca = Plotting.plot_pca_scatter(adata, color=None, pc1=pc1, pc2=pc2)
-                    else:
-                        # Custom color selection
-                        unique_groups = adata.obs[pca_color_by].unique()
-                        st.write(f"**Select colors for each group in '{pca_color_by}'**")
-                        group_color_map = {}
-                        for group in unique_groups:
-                            default_idx = list(unique_groups).index(group) % len(COLOR_OPTIONS)
-                            color = st.selectbox(f"Color for {group}", COLOR_OPTIONS, index=default_idx, key=f"pca_color_{group}")
-                            group_color_map[group] = color
-                        
-                        fig_pca = Plotting.plot_pca_scatter(
-                            adata, color=pca_color_by, pc1=pc1, pc2=pc2,
-                            custom_color_map=create_custom_color_map(adata.obs[pca_color_by], list(group_color_map.values()))
-                        )
+                    # Prepare for static plot
+                    set_publication_style()
+                    fig_pca, ax = plt.subplots(figsize=(8, 8))
                     
-                    fig_pca = apply_publication_style(fig_pca)
-                    fig_pca.update_layout(title=f"PCA: PC{pc1} vs PC{pc2}")
-                    st.plotly_chart(fig_pca, use_container_width=True)
+                    x = adata.obsm['X_pca'][:, pc1-1]
+                    y = adata.obsm['X_pca'][:, pc2-1]
+                    
+                    if pca_color_by == 'None':
+                        ax.scatter(x, y, c='gray', s=40, alpha=0.7, edgecolors='white', linewidth=0.5)
+                    else:
+                        # Check if categorical or continuous
+                        if pd.api.types.is_numeric_dtype(adata.obs[pca_color_by]) and len(adata.obs[pca_color_by].unique()) > 50:
+                            # Continuous
+                            sc_plot = ax.scatter(x, y, c=adata.obs[pca_color_by], cmap='viridis', 
+                                               s=40, alpha=0.8, edgecolors='white', linewidth=0.2)
+                            plt.colorbar(sc_plot, ax=ax, label=pca_color_by)
+                        else:
+                            # Categorical - Allow color selection
+                            unique_groups = adata.obs[pca_color_by].unique()
+                            st.write(f"**Select colors for each group in '{pca_color_by}'**")
+                            group_color_map = {}
+                            cols = st.columns(min(len(unique_groups), 4))
+                            for i, group in enumerate(unique_groups):
+                                with cols[i % 4]:
+                                    default_idx = list(unique_groups).index(group) % len(COLOR_OPTIONS)
+                                    color = st.selectbox(f"{group}", COLOR_OPTIONS, index=default_idx, key=f"pca_color_{group}")
+                                    group_color_map[group] = color
+                            
+                            sns.scatterplot(x=x, y=y, hue=adata.obs[pca_color_by], 
+                                          palette=group_color_map, ax=ax, s=50, 
+                                          edgecolor='white', linewidth=0.5, alpha=0.9)
+                            ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0, title=pca_color_by)
+                    
+                    ax.set_xlabel(f'PC{pc1}', fontweight='bold')
+                    ax.set_ylabel(f'PC{pc2}', fontweight='bold')
+                    ax.set_title(f'PCA: PC{pc1} vs PC{pc2}', fontweight='bold')
+                    ax.grid(True, linestyle='--', alpha=0.3)
+                    
+                    st.pyplot(fig_pca)
                     st.caption("**Summary:** PCA reduces high-dimensional gene expression data into principal components. This 2D scatter plot helps identify major sources of variation and potential cell clusters.")
                     
                     # Show top genes for selected PCs
@@ -170,7 +234,7 @@ def main():
                                     'Loading': loadings_pc1[top_genes_pc1_idx]
                                 })
                                 st.write(f"**Top genes for PC{pc1}:**")
-                                st.dataframe(top_genes_pc1, use_container_width=True)
+                                st.dataframe(top_genes_pc1, width='stretch')
                             
                             with col2:
                                 loadings_pc2 = adata.varm['PCs'][:, pc2-1]
@@ -180,7 +244,7 @@ def main():
                                     'Loading': loadings_pc2[top_genes_pc2_idx]
                                 })
                                 st.write(f"**Top genes for PC{pc2}:**")
-                                st.dataframe(top_genes_pc2, use_container_width=True)
+                                st.dataframe(top_genes_pc2, width='stretch')
                     
                     st.success("PCA computed successfully!")
                     
@@ -230,30 +294,68 @@ def main():
             color_options = ['None'] + list(adata.obs.columns)
             umap_color_by = st.selectbox("Color by (metadata)", color_options, key="umap_color_by")
             
-            # Custom color selection if coloring by a column
+            # Custom color selection map for both 2D (static) and 3D (interactive)
+            group_color_map = {}
             custom_color_map = None
+            
             if umap_color_by != 'None':
-                unique_groups = adata.obs[umap_color_by].unique()
-                st.write(f"**Select colors for each group in '{umap_color_by}'**")
-                group_color_map = {}
-                for group in unique_groups:
-                    default_idx = list(unique_groups).index(group) % len(COLOR_OPTIONS)
-                    color = st.selectbox(f"Color for {group}", COLOR_OPTIONS, index=default_idx, key=f"umap_color_{group}")
-                    group_color_map[group] = color
-                custom_color_map = create_custom_color_map(adata.obs[umap_color_by], list(group_color_map.values()))
+                if not (pd.api.types.is_numeric_dtype(adata.obs[umap_color_by]) and len(adata.obs[umap_color_by].unique()) > 50):
+                    unique_groups = adata.obs[umap_color_by].unique()
+                    st.write(f"**Select colors for each group in '{umap_color_by}'**")
+                    cols = st.columns(min(len(unique_groups), 4))
+                    for i, group in enumerate(unique_groups):
+                        with cols[i % 4]:
+                            default_idx = list(unique_groups).index(group) % len(COLOR_OPTIONS)
+                            color = st.selectbox(f"{group}", COLOR_OPTIONS, index=default_idx, key=f"umap_color_{group}")
+                            group_color_map[group] = color
+                    
+                    # For 3D plot
+                    custom_color_map = create_custom_color_map(adata.obs[umap_color_by], list(group_color_map.values()))
             
             col1, col2 = st.columns(2)
             
             with col1:
-                # 2D UMAP
-                fig_umap_2d = Plotting.plot_embedding(
-                    adata, basis='umap', color=umap_color_by if umap_color_by != 'None' else None,
-                    custom_color_map=custom_color_map
-                )
-                fig_umap_2d = apply_publication_style(fig_umap_2d)
-                fig_umap_2d.update_layout(title="2D UMAP Projection")
-                st.plotly_chart(fig_umap_2d, use_container_width=True)
+                # 2D UMAP - Static Publication Quality
+                set_publication_style()
+                # Increased figure size for better spacing
+                fig_umap_2d, ax = plt.subplots(figsize=(12, 12))
+                
+                x = adata.obsm['X_umap'][:, 0]
+                y = adata.obsm['X_umap'][:, 1]
+                
+                # Reduced point size and opacity for better visibility of overlapping groups
+                point_size = 5
+                alpha_val = 0.4
+
+                if umap_color_by == 'None':
+                    ax.scatter(x, y, c='gray', s=point_size, alpha=alpha_val, edgecolors='none')
+                else:
+                    if pd.api.types.is_numeric_dtype(adata.obs[umap_color_by]) and len(adata.obs[umap_color_by].unique()) > 50:
+                        sc_plot = ax.scatter(x, y, c=adata.obs[umap_color_by], cmap='viridis', 
+                                           s=point_size, alpha=alpha_val, edgecolors='none')
+                        plt.colorbar(sc_plot, ax=ax, label=umap_color_by)
+                    else:
+                        sns.scatterplot(x=x, y=y, hue=adata.obs[umap_color_by], 
+                                      palette=group_color_map, ax=ax, s=point_size, 
+                                      edgecolor='none', alpha=alpha_val)
+                        ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0, title=umap_color_by)
+                
+                ax.set_xlabel('UMAP1', fontweight='bold')
+                ax.set_ylabel('UMAP2', fontweight='bold')
+                ax.set_title('2D UMAP Projection', fontweight='bold')
+                ax.grid(False) # Clean look for UMAP
+                
+                st.pyplot(fig_umap_2d)
                 st.caption("**Summary:** UMAP preserves local structure better than t-SNE and is widely used for visualizing cell clusters in single-cell data.")
+                
+                st.subheader("Interactive 2D UMAP")
+                fig_umap_2d_int = Plotting.plot_embedding(
+                    adata, basis='umap', color=umap_color_by if umap_color_by != 'None' else None,
+                    use_3d=False, custom_color_map=custom_color_map,
+                    marker_opacity=0.4, marker_size=3
+                )
+                fig_umap_2d_int = apply_plotly_publication_style(fig_umap_2d_int)
+                st.plotly_chart(fig_umap_2d_int, use_container_width=True)
             
             with col2:
                 # 3D UMAP if available
@@ -261,9 +363,9 @@ def main():
                     fig_umap_3d = Plotting.plot_embedding(
                         adata, basis='umap', color=umap_color_by if umap_color_by != 'None' else None,
                         use_3d=True, custom_color_map=custom_color_map,
-                        marker_opacity=0.55, marker_size=4  # Translucent, no border (handled in apply_style)
+                        marker_opacity=0.4, marker_size=2
                     )
-                    fig_umap_3d = apply_publication_style(fig_umap_3d)
+                    fig_umap_3d = apply_plotly_publication_style(fig_umap_3d)
                     fig_umap_3d.update_layout(
                         title="3D UMAP Projection",
                         scene=dict(
@@ -297,25 +399,61 @@ def main():
             color_options = ['None'] + list(adata.obs.columns)
             tsne_color_by = st.selectbox("Color by (metadata)", color_options, key="tsne_color_by")
             
+            group_color_map = {}
             custom_color_map = None
             if tsne_color_by != 'None':
-                unique_groups = adata.obs[tsne_color_by].unique()
-                st.write(f"**Select colors for each group in '{tsne_color_by}'**")
-                group_color_map = {}
-                for group in unique_groups:
-                    default_idx = list(unique_groups).index(group) % len(COLOR_OPTIONS)
-                    color = st.selectbox(f"Color for {group}", COLOR_OPTIONS, index=default_idx, key=f"tsne_color_{group}")
-                    group_color_map[group] = color
-                custom_color_map = create_custom_color_map(adata.obs[tsne_color_by], list(group_color_map.values()))
+                if not (pd.api.types.is_numeric_dtype(adata.obs[tsne_color_by]) and len(adata.obs[tsne_color_by].unique()) > 50):
+                    unique_groups = adata.obs[tsne_color_by].unique()
+                    st.write(f"**Select colors for each group in '{tsne_color_by}'**")
+                    cols = st.columns(min(len(unique_groups), 4))
+                    for i, group in enumerate(unique_groups):
+                        with cols[i % 4]:
+                            default_idx = list(unique_groups).index(group) % len(COLOR_OPTIONS)
+                            color = st.selectbox(f"{group}", COLOR_OPTIONS, index=default_idx, key=f"tsne_color_{group}")
+                            group_color_map[group] = color
+                    custom_color_map = create_custom_color_map(adata.obs[tsne_color_by], list(group_color_map.values()))
             
-            fig_tsne = Plotting.plot_embedding(
-                adata, basis='tsne', color=tsne_color_by if tsne_color_by != 'None' else None,
-                custom_color_map=custom_color_map
-            )
-            fig_tsne = apply_publication_style(fig_tsne)
-            fig_tsne.update_layout(title="t-SNE Projection")
-            st.plotly_chart(fig_tsne, use_container_width=True)
+            # Static t-SNE Plot
+            set_publication_style()
+            # Increased figure size
+            fig_tsne, ax = plt.subplots(figsize=(12, 12))
+            
+            x = adata.obsm['X_tsne'][:, 0]
+            y = adata.obsm['X_tsne'][:, 1]
+            
+            # Reduced point size and opacity
+            point_size = 5
+            alpha_val = 0.4
+            
+            if tsne_color_by == 'None':
+                ax.scatter(x, y, c='gray', s=point_size, alpha=alpha_val, edgecolors='none')
+            else:
+                if pd.api.types.is_numeric_dtype(adata.obs[tsne_color_by]) and len(adata.obs[tsne_color_by].unique()) > 50:
+                    sc_plot = ax.scatter(x, y, c=adata.obs[tsne_color_by], cmap='viridis', 
+                                       s=point_size, alpha=alpha_val, edgecolors='none')
+                    plt.colorbar(sc_plot, ax=ax, label=tsne_color_by)
+                else:
+                    sns.scatterplot(x=x, y=y, hue=adata.obs[tsne_color_by], 
+                                  palette=group_color_map, ax=ax, s=point_size, 
+                                  edgecolor='none', alpha=alpha_val)
+                    ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0, title=tsne_color_by)
+            
+            ax.set_xlabel('t-SNE1', fontweight='bold')
+            ax.set_ylabel('t-SNE2', fontweight='bold')
+            ax.set_title('t-SNE Projection', fontweight='bold')
+            ax.grid(False)
+            
+            st.pyplot(fig_tsne)
             st.caption("**Summary:** t-SNE excels at revealing local structure and distinct clusters but may distort global distances.")
+            
+            st.subheader("Interactive t-SNE")
+            fig_tsne_int = Plotting.plot_embedding(
+                adata, basis='tsne', color=tsne_color_by if tsne_color_by != 'None' else None,
+                use_3d=False, custom_color_map=custom_color_map,
+                marker_opacity=0.4, marker_size=3
+            )
+            fig_tsne_int = apply_plotly_publication_style(fig_tsne_int)
+            st.plotly_chart(fig_tsne_int, use_container_width=True)
             
             # t-SNE parameters
             st.subheader("t-SNE Parameters")

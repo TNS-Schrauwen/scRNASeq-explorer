@@ -13,6 +13,7 @@ plt.rcParams.update({
     'axes.facecolor': 'white',
     'axes.edgecolor': 'black',
     'axes.labelcolor': 'black',
+    'axes.labelweight': 'bold',
     'text.color': 'black',
     'xtick.color': 'black',
     'ytick.color': 'black',
@@ -21,7 +22,8 @@ plt.rcParams.update({
     'grid.linestyle': '--',
     'grid.alpha': 0.5,
     'font.size': 11,
-    'axes.titleweight': 'bold'
+    'axes.titleweight': 'bold',
+    'font.weight': 'bold'
 })
 
 def main():
@@ -111,7 +113,7 @@ def main():
             # Doublet summary
             st.subheader("Doublet Summary")
             results_df = DoubletDetection.get_doublet_summary(adata)
-            st.dataframe(results_df, use_container_width=True)
+            st.dataframe(results_df, width='stretch')
             
             # Score distribution
             st.subheader("Doublet Score Distribution")

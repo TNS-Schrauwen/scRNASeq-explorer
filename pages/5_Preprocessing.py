@@ -10,7 +10,7 @@ import matplotlib as mpl
 
 
 def main():
-    st.title("⚙️ Preprocessing")
+    st.title("Preprocessing")
     st.markdown("Normalize, find variable genes, and scale your single-cell data.")
     
     # Check if data is loaded and QC is done
@@ -60,7 +60,7 @@ def main():
     max_value = st.sidebar.number_input("Max value for scaling", value=10.0)
     
     # Main content with tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Normalization", "🔍 Variable Genes", "⚖️ Scaling", "📈 Results"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Normalization", "Variable Genes", "Scaling", "Results"])
     
     with tab1:
         st.header("Normalization")
@@ -203,11 +203,50 @@ def main():
                         'grid.color': 'lightgray',
                         'scatter.edgecolors': 'black'
                     })
-                    fig_hvg = plt.figure()
-                    ax = fig_hvg.add_subplot(111)
-                    sc.pl.highly_variable_genes(adata_hvg, ax=ax, show=False, 
-                                                colorbar_color='dodgerblue')  # Vibrant color
-                    st.pyplot(fig_hvg)
+                    
+                    # Custom plot for HVGs
+                    fig, ax = plt.subplots(figsize=(8, 6))
+                    df = adata_hvg.var
+                    
+                    # Determine Y-axis metric
+                    if 'dispersions_norm' in df.columns:
+                        y_col = 'dispersions_norm'
+                        y_label = 'Normalized Dispersion'
+                    elif 'variances_norm' in df.columns:
+                        y_col = 'variances_norm'
+                        y_label = 'Normalized Variance'
+                    else:
+                        y_col = 'dispersions'
+                        y_label = 'Dispersion'
+                    
+                    # Plot non-HVG
+                    ax.scatter(df.loc[~df['highly_variable'], 'means'], 
+                             df.loc[~df['highly_variable'], y_col],
+                             c='lightgray', s=20, label='Non-variable', alpha=0.6, edgecolors='none')
+                    
+                    # Plot HVG
+                    ax.scatter(df.loc[df['highly_variable'], 'means'], 
+                             df.loc[df['highly_variable'], y_col],
+                             c='#d62728', s=30, label='Highly Variable', alpha=0.9, edgecolors='white', linewidth=0.5)
+                    
+                    ax.set_xlabel('Mean Expression')
+                    ax.set_ylabel(y_label)
+                    ax.set_title('Highly Variable Genes Selection')
+                    ax.legend(frameon=True, facecolor='white', edgecolor='black')
+                    ax.grid(True, linestyle='--', alpha=0.3)
+                    
+                    if hvg_method == 'seurat_v3':
+                        ax.set_xscale('log')
+                        
+                    st.pyplot(fig)
+                    
+                    st.caption("""
+                    **Plot Interpretation:**
+                    * **X-axis (Mean expression):** Average expression level of each gene.
+                    * **Y-axis (Dispersion/Variance):** Measure of variability. Higher values indicate genes that vary more than expected.
+                    * **Red points:** Genes selected as 'highly variable' (HVGs). These carry the most biological information.
+                    * **Gray points:** Genes with stable expression across cells (noise or housekeeping).
+                    """)
                     
                     # HVG statistics
                     n_hvg = adata_hvg.var['highly_variable'].sum()
@@ -225,10 +264,10 @@ def main():
                     with st.expander("Top Highly Variable Genes"):
                         if hvg_method == 'seurat_v3':
                             hvg_df = adata_hvg.var[adata_hvg.var['highly_variable']].nlargest(20, 'variances_norm')
-                            st.dataframe(hvg_df[['means', 'variances_norm']], use_container_width=True)
+                            st.dataframe(hvg_df[['means', 'variances_norm']], width='stretch')
                         else:
                             hvg_df = adata_hvg.var[adata_hvg.var['highly_variable']].nlargest(20, 'dispersions_norm')
-                            st.dataframe(hvg_df[['means', 'dispersions_norm']], use_container_width=True)
+                            st.dataframe(hvg_df[['means', 'dispersions_norm']], width='stretch')
                 
                 except Exception as e:
                     st.error(f"Error finding variable genes: {str(e)}")
@@ -409,11 +448,50 @@ def main():
                             'grid.color': 'lightgray',
                             'scatter.edgecolors': 'black'
                         })
-                        fig_hvg = plt.figure()
-                        ax = fig_hvg.add_subplot(111)
-                        sc.pl.highly_variable_genes(adata_processed, ax=ax, show=False, 
-                                                    colorbar_color='dodgerblue')
-                        st.pyplot(fig_hvg)
+                        
+                        # Custom plot for HVGs
+                        fig, ax = plt.subplots(figsize=(8, 6))
+                        df = adata_processed.var
+                        
+                        # Determine Y-axis metric
+                        if 'dispersions_norm' in df.columns:
+                            y_col = 'dispersions_norm'
+                            y_label = 'Normalized Dispersion'
+                        elif 'variances_norm' in df.columns:
+                            y_col = 'variances_norm'
+                            y_label = 'Normalized Variance'
+                        else:
+                            y_col = 'dispersions'
+                            y_label = 'Dispersion'
+                        
+                        # Plot non-HVG
+                        ax.scatter(df.loc[~df['highly_variable'], 'means'], 
+                                 df.loc[~df['highly_variable'], y_col],
+                                 c='lightgray', s=20, label='Non-variable', alpha=0.6, edgecolors='none')
+                        
+                        # Plot HVG
+                        ax.scatter(df.loc[df['highly_variable'], 'means'], 
+                                 df.loc[df['highly_variable'], y_col],
+                                 c='#d62728', s=30, label='Highly Variable', alpha=0.9, edgecolors='white', linewidth=0.5)
+                        
+                        ax.set_xlabel('Mean Expression')
+                        ax.set_ylabel(y_label)
+                        ax.set_title('Highly Variable Genes Selection')
+                        ax.legend(frameon=True, facecolor='white', edgecolor='black')
+                        ax.grid(True, linestyle='--', alpha=0.3)
+                        
+                        if hvg_method == 'seurat_v3':
+                            ax.set_xscale('log')
+                            
+                        st.pyplot(fig)
+                    
+                    st.caption("""
+                    **Plot Interpretation:**
+                    * **X-axis (Mean expression):** Average expression level of each gene.
+                    * **Y-axis (Dispersion/Variance):** Measure of variability. Higher values indicate genes that vary more than expected.
+                    * **Red points:** Genes selected as 'highly variable' (HVGs). These carry the most biological information.
+                    * **Gray points:** Genes with stable expression across cells (noise or housekeeping).
+                    """)
                     
                     # Next steps
                     st.divider()

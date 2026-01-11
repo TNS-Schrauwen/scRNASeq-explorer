@@ -26,6 +26,9 @@ plt.rcParams.update({
     'font.sans-serif': ['Arial', 'Helvetica', 'DejaVu Sans'],
     'axes.titlesize': 14,
     'axes.labelsize': 12,
+    'axes.labelweight': 'bold',
+    'axes.titleweight': 'bold',
+    'font.weight': 'bold',
 })
 
 sns.set_style("whitegrid")

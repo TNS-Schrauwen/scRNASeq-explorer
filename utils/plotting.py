@@ -27,9 +27,9 @@ class Plotting:
         paper_bgcolor="white",
         plot_bgcolor="white",
         font=dict(family="Arial", size=12, color="black"),
-        title=dict(font=dict(size=16, color="black", family="Arial")),
+        title=dict(font=dict(size=18, color="black", family="Arial Black")),
         xaxis=dict(
-            title_font=dict(family="Arial", size=14, color="black", weight="bold"),
+            title_font=dict(family="Arial Black", size=14, color="black"),
             tickfont=dict(color="black"),
             linewidth=1.5,
             linecolor="black",
@@ -37,7 +37,7 @@ class Plotting:
             showgrid=False
         ),
         yaxis=dict(
-            title_font=dict(family="Arial", size=14, color="black", weight="bold"),
+            title_font=dict(family="Arial Black", size=14, color="black"),
             tickfont=dict(color="black"),
             linewidth=1.5,
             linecolor="black",
