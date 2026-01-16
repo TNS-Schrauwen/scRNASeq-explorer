@@ -85,7 +85,7 @@ def main():
 
         st.subheader("Detailed Cell-Level Statistics")
         metrics_df = QCMetrics.get_detailed_metrics_table(adata)
-        st.dataframe(metrics_df, use_container_width=True)
+        st.dataframe(metrics_df, width='stretch')
 
     with tab2:
         st.header("Publication-Quality QC Plots")

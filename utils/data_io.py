@@ -7,6 +7,7 @@ import os
 import scipy.sparse as sp
 import numpy as np
 import pandas as pd
+import warnings
 from typing import List, Dict
 
 
@@ -59,7 +60,9 @@ class DataIO:
 
             temp_path = DataIO._save_temp_file(uploaded_file, '.h5')
             try:
-                adata = sc.read_10x_h5(temp_path)
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=UserWarning, message="Variable names are not unique")
+                    adata = sc.read_10x_h5(temp_path)
                 adata.var_names_make_unique()  # Safe merging
 
                 adata.obs['sample'] = unique_id
@@ -96,7 +99,9 @@ class DataIO:
         """
         temp_path = DataIO._save_temp_file(uploaded_file, '.h5ad')
         try:
-            adata = sc.read_h5ad(temp_path)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=UserWarning, message="Variable names are not unique")
+                adata = sc.read_h5ad(temp_path)
             adata.var_names_make_unique()
 
             # Add default 'sample' if missing

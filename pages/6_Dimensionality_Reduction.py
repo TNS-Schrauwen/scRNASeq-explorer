@@ -312,71 +312,70 @@ def main():
                     # For 3D plot
                     custom_color_map = create_custom_color_map(adata.obs[umap_color_by], list(group_color_map.values()))
             
-            col1, col2 = st.columns(2)
+            # 2D UMAP - Static Publication Quality
+            set_publication_style()
+            # Landscape, bigger size, high DPI (600+)
+            fig_umap_2d, ax = plt.subplots(figsize=(16, 10), dpi=600)
             
-            with col1:
-                # 2D UMAP - Static Publication Quality
-                set_publication_style()
-                # Increased figure size for better spacing
-                fig_umap_2d, ax = plt.subplots(figsize=(12, 12))
-                
-                x = adata.obsm['X_umap'][:, 0]
-                y = adata.obsm['X_umap'][:, 1]
-                
-                # Reduced point size and opacity for better visibility of overlapping groups
-                point_size = 5
-                alpha_val = 0.4
+            x = adata.obsm['X_umap'][:, 0]
+            y = adata.obsm['X_umap'][:, 1]
+            
+            # Reduced point size and opacity for better visibility of overlapping groups
+            point_size = 5
+            alpha_val = 0.4
 
-                if umap_color_by == 'None':
-                    ax.scatter(x, y, c='gray', s=point_size, alpha=alpha_val, edgecolors='none')
+            if umap_color_by == 'None':
+                ax.scatter(x, y, c='gray', s=point_size, alpha=alpha_val, edgecolors='none')
+            else:
+                if pd.api.types.is_numeric_dtype(adata.obs[umap_color_by]) and len(adata.obs[umap_color_by].unique()) > 50:
+                    sc_plot = ax.scatter(x, y, c=adata.obs[umap_color_by], cmap='viridis', 
+                                       s=point_size, alpha=alpha_val, edgecolors='none')
+                    plt.colorbar(sc_plot, ax=ax, label=umap_color_by)
                 else:
-                    if pd.api.types.is_numeric_dtype(adata.obs[umap_color_by]) and len(adata.obs[umap_color_by].unique()) > 50:
-                        sc_plot = ax.scatter(x, y, c=adata.obs[umap_color_by], cmap='viridis', 
-                                           s=point_size, alpha=alpha_val, edgecolors='none')
-                        plt.colorbar(sc_plot, ax=ax, label=umap_color_by)
-                    else:
-                        sns.scatterplot(x=x, y=y, hue=adata.obs[umap_color_by], 
-                                      palette=group_color_map, ax=ax, s=point_size, 
-                                      edgecolor='none', alpha=alpha_val)
-                        ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0, title=umap_color_by)
-                
-                ax.set_xlabel('UMAP1', fontweight='bold')
-                ax.set_ylabel('UMAP2', fontweight='bold')
-                ax.set_title('2D UMAP Projection', fontweight='bold')
-                ax.grid(False) # Clean look for UMAP
-                
-                st.pyplot(fig_umap_2d)
-                st.caption("**Summary:** UMAP preserves local structure better than t-SNE and is widely used for visualizing cell clusters in single-cell data.")
-                
-                st.subheader("Interactive 2D UMAP")
-                fig_umap_2d_int = Plotting.plot_embedding(
-                    adata, basis='umap', color=umap_color_by if umap_color_by != 'None' else None,
-                    use_3d=False, custom_color_map=custom_color_map,
-                    marker_opacity=0.4, marker_size=3
-                )
-                fig_umap_2d_int = apply_plotly_publication_style(fig_umap_2d_int)
-                st.plotly_chart(fig_umap_2d_int, use_container_width=True)
+                    sns.scatterplot(x=x, y=y, hue=adata.obs[umap_color_by], 
+                                  palette=group_color_map, ax=ax, s=point_size, 
+                                  edgecolor='none', alpha=alpha_val)
+                    ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0, title=umap_color_by)
             
-            with col2:
-                # 3D UMAP if available
-                if adata.obsm['X_umap'].shape[1] >= 3:
-                    fig_umap_3d = Plotting.plot_embedding(
-                        adata, basis='umap', color=umap_color_by if umap_color_by != 'None' else None,
-                        use_3d=True, custom_color_map=custom_color_map,
-                        marker_opacity=0.4, marker_size=2
+            ax.set_xlabel('UMAP1', fontweight='bold')
+            ax.set_ylabel('UMAP2', fontweight='bold')
+            ax.set_title('2D UMAP Projection', fontweight='bold')
+            ax.grid(False) # Clean look for UMAP
+            
+            st.pyplot(fig_umap_2d, use_container_width=True)
+            st.caption("**Summary:** UMAP preserves local structure better than t-SNE and is widely used for visualizing cell clusters in single-cell data.")
+            
+            st.subheader("Interactive 2D UMAP")
+            fig_umap_2d_int = Plotting.plot_embedding(
+                adata, basis='umap', color=umap_color_by if umap_color_by != 'None' else None,
+                use_3d=False, custom_color_map=custom_color_map,
+                marker_opacity=0.4, marker_size=3
+            )
+            fig_umap_2d_int = apply_plotly_publication_style(fig_umap_2d_int)
+            fig_umap_2d_int.update_layout(height=700)
+            st.plotly_chart(fig_umap_2d_int, use_container_width=True)
+            
+            # 3D UMAP if available
+            if adata.obsm['X_umap'].shape[1] >= 3:
+                st.subheader("Interactive 3D UMAP")
+                fig_umap_3d = Plotting.plot_embedding(
+                    adata, basis='umap', color=umap_color_by if umap_color_by != 'None' else None,
+                    use_3d=True, custom_color_map=custom_color_map,
+                    marker_opacity=0.4, marker_size=2
+                )
+                fig_umap_3d = apply_plotly_publication_style(fig_umap_3d)
+                fig_umap_3d.update_layout(
+                    title="3D UMAP Projection",
+                    height=800,
+                    scene=dict(
+                        camera=dict(eye=dict(x=1.5, y=1.5, z=1.5)),
+                        aspectmode='cube'
                     )
-                    fig_umap_3d = apply_plotly_publication_style(fig_umap_3d)
-                    fig_umap_3d.update_layout(
-                        title="3D UMAP Projection",
-                        scene=dict(
-                            camera=dict(eye=dict(x=1.5, y=1.5, z=1.5)),
-                            aspectmode='cube'
-                        )
-                    )
-                    st.plotly_chart(fig_umap_3d, use_container_width=True)
-                    st.caption("**Summary:** 3D UMAP provides a more comprehensive view of data topology. Translucent points help reveal overlaps and density.")
-                else:
-                    st.info("3D UMAP not computed. Enable 'Compute 3D UMAP' and run again.")
+                )
+                st.plotly_chart(fig_umap_3d, use_container_width=True)
+                st.caption("**Summary:** 3D UMAP provides a more comprehensive view of data topology. Translucent points help reveal overlaps and density.")
+            else:
+                st.info("3D UMAP not computed. Enable 'Compute 3D UMAP' and run again.")
     
     with tab3:
         st.header("t-SNE Visualization")

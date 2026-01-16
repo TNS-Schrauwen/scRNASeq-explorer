@@ -141,7 +141,7 @@ def main():
             'Cells': cluster_counts.values,
             'Percentage': (cluster_counts.values / adata.n_obs * 100).round(2)
         })
-        st.dataframe(cluster_df, use_container_width=True)
+        st.dataframe(cluster_df, width='stretch')
         
         # Visualization
         st.subheader("Cluster Visualization")
@@ -215,7 +215,7 @@ def main():
             contingency = pd.crosstab(adata.obs[cluster1], adata.obs[cluster2])
             
             st.subheader("Cluster Correspondence")
-            st.dataframe(contingency, use_container_width=True)
+            st.dataframe(contingency, width='stretch')
             
             # Compute adjusted rand index
             try:

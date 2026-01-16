@@ -322,7 +322,7 @@ def main():
                     })
             
             marker_df = pd.DataFrame(marker_table)
-            st.dataframe(marker_df, use_container_width=True)
+            st.dataframe(marker_df, width='stretch')
             
             # Heatmap of top markers
             st.subheader("Marker Gene Heatmap")

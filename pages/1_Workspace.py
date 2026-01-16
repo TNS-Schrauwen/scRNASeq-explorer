@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import yaml
+import warnings
 from utils.workspace_manager import WorkspaceManager
 
 def main():
@@ -66,7 +67,10 @@ def main():
                         adata_path = os.path.join(workspace_path, "data", "processed_data.h5ad")
                         if os.path.exists(adata_path):
                             import scanpy as sc
-                            st.session_state.adata = sc.read_h5ad(adata_path)
+                            with warnings.catch_warnings():
+                                warnings.filterwarnings("ignore", category=UserWarning, message="Variable names are not unique")
+                                st.session_state.adata = sc.read_h5ad(adata_path)
+                            st.session_state.adata.var_names_make_unique()
                             st.success(f"Workspace '{selected_workspace}' loaded with existing data!")
                         else:
                             st.session_state.adata = None
